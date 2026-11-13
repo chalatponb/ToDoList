@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List พ่อบ้านมือโปร</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.6rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p.subtitle {
+            margin: 0 0 20px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ฟอร์มเพิ่มรายการ */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        select, input[type="text"], input[type="date"], input[type="time"] {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            background-color: white;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .datetime-inputs {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .datetime-inputs input {
+            flex: 1;
+            min-width: 130px;
+            color: var(--text-main);
+        }
+
+        button.add-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        button.add-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* แถบตัวกรอง */
+        .filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            overflow-x: auto;
+        }
+
+        .filter-btn {
+            background: none;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* รายการ To-Do */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+            transition: background 0.15s;
+        }
+
+        li:hover {
+            background-color: #f8fafc;
+        }
+
+        .task-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex: 1;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .task-content {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-shopping { background: #dcfce7; color: #166534; }
+        .badge-repair { background: #fef3c7; color: #92400e; }
+        .badge-bill { background: #fee2e2; color: #991b1b; }
+        .badge-general { background: #e0e7ff; color: #3730a3; }
+
+        .task-text {
+            font-size: 1rem;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .task-datetime {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .overdue {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .completed .task-datetime {
+            color: #94a3b8;
+        }
+
+        .actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-icon {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: white;
+        }
+
+        .btn-edit { background-color: var(--warning); }
+        .btn-edit:hover { opacity: 0.9; }
+
+        .btn-delete { background-color: var(--danger); }
+        .btn-delete:hover { opacity: 0.9; }
+
+        .footer-info {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+        }
+
+        /* Modal สำหรับแก้ไขรายการ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-box h3 {
+            margin: 0 0 5px 0;
+            color: var(--text-main);
+        }
+
+        .modal-box label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: -6px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: var(--text-main);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛠️ To-Do List พ่อบ้าน</h1>
+    <p class="subtitle">จดบันทึกงานบ้าน ซื้อของ ซ่อมแซม และจ่ายบิล พร้อมนัดหมายวันเวลา</p>
+
+    <!-- ฟอร์มเพิ่มรายการ -->
+    <form class="input-group" id="todo-form">
+        <div class="form-row">
+            <select id="category-input">
+                <option value="shopping">🛒 ซื้อของเข้าบ้าน</option>
+                <option value="repair">🔧 ซ่อมแซม / ดูแลบ้าน</option>
+                <option value="bill">💸 จ่ายบิล / ธุระ</option>
+                <option value="general">🏠 งานบ้านทั่วไป</option>
+            </select>
+            <input type="text" id="todo-input" placeholder="เพิ่มรายการ... เช่น ช่างแอร์เข้า, จ่ายค่าไฟ" required>
+        </div>
+        <div class="form-row">
+            <div class="datetime-inputs">
+                <input type="date" id="date-input" title="เลือกวันที่">
+                <input type="time" id="time-input" title="เลือกเวลา">
+            </div>
+            <button type="submit" class="add-btn">+ เพิ่มรายการ</button>
+        </div>
+    </form>
+
+    <!-- ตัวกรองหมวดหมู่ -->
+    <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all', this)">ทั้งหมด</button>
+        <button class="filter-btn" onclick="setFilter('shopping', this)">🛒 ซื้อของ</button>
+        <button class="filter-btn" onclick="setFilter('repair', this)">🔧 ซ่อมแซม</button>
+        <button class="filter-btn" onclick="setFilter('bill', this)">💸 จ่ายบิล</button>
+        <button class="filter-btn" onclick="setFilter('general', this)">🏠 ทั่วไป</button>
+    </div>
+
+    <!-- รายการแสดงผล -->
+    <ul id="todo-list"></ul>
+
+    <!-- สรุปสถานะ -->
+    <div class="footer-info">
+        <span id="task-count">เหลือ 0 รายการที่ต้องทำ</span>
+        <button class="clear-btn" onclick="clearCompleted()">ลบรายการที่ทำเสร็จแล้ว</button>
+    </div>
+</div>
+
+<!-- หน้าต่าง Popup (Modal) สำหรับแก้ไขข้อมูล -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal-box">
+        <h3>✏️ แก้ไขรายการ</h3>
+        <input type="hidden" id="edit-id">
+        
+        <label>หมวดหมู่</label>
+        <select id="edit-category">
+            <option value="shopping">🛒 ซื้อของเข้าบ้าน</option>
+            <option value="repair">🔧 ซ่อมแซม / ดูแลบ้าน</option>
+            <option value="bill">💸 จ่ายบิล / ธุระ</option>
+            <option value="general">🏠 งานบ้านทั่วไป</option>
+        </select>
+
+        <label>รายละเอียดงาน</label>
+        <input type="text" id="edit-text" required>
+
+        <label>วันที่</label>
+        <input type="date" id="edit-date">
+
+        <label>เวลา</label>
+        <input type="time" id="edit-time">
+
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeEditModal()">ยกเลิก</button>
+            <button type="button" class="btn-save" onclick="saveEdit()">บันทึกการแก้ไข</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let todos = JSON.parse(localStorage.getItem('househusband_todos')) || [];
+    let currentFilter = 'all';
+
+    const form = document.getElementById('todo-form');
+    const input = document.getElementById('todo-input');
+    const categoryInput = document.getElementById('category-input');
+    const dateInput = document.getElementById('date-input');
+    const timeInput = document.getElementById('time-input');
+    const todoList = document.getElementById('todo-list');
+    const taskCount = document.getElementById('task-count');
+
+    const categoryLabels = {
+        shopping: { text: '🛒 ซื้อของ', class: 'badge-shopping' },
+        repair: { text: '🔧 ซ่อมแซม', class: 'badge-repair' },
+        bill: { text: '💸 จ่ายบิล', class: 'badge-bill' },
+        general: { text: '🏠 ทั่วไป', class: 'badge-general' }
+    };
+
+    // บันทึกข้อมูลลง LocalStorage
+    function saveTodos() {
+        localStorage.setItem('househusband_todos', JSON.stringify(todos));
+        renderTodos();
+    }
+
+    // เพิ่มรายการใหม่
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        const newTodo = {
+            id: Date.now(),
+            text: text,
+            category: categoryInput.value,
+            date: dateInput.value, // เก็บค่า YYYY-MM-DD
+            time: timeInput.value, // เก็บค่า HH:MM
+            completed: false
+        };
+
+        todos.unshift(newTodo);
+        input.value = '';
+        dateInput.value = '';
+        timeInput.value = '';
+        saveTodos();
+    });
+
+    // สลับสถานะ เสร็จสิ้น / ยังไม่เสร็จ
+    function toggleComplete(id) {
+        todos = todos.map(todo => 
+            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        );
+        saveTodos();
+    }
+
+    // เปิดหน้าต่างแก้ไข (Edit Modal)
+    function openEditModal(id) {
+        const target = todos.find(todo => todo.id === id);
+        if (!target) return;
+
+        document.getElementById('edit-id').value = target.id;
+        document.getElementById('edit-category').value = target.category;
+        document.getElementById('edit-text').value = target.text;
+        document.getElementById('edit-date').value = target.date || '';
+        document.getElementById('edit-time').value = target.time || '';
+
+        document.getElementById('edit-modal').style.display = 'flex';
+    }
+
+    // ปิดหน้าต่างแก้ไข
+    function closeEditModal() {
+        document.getElementById('edit-modal').style.display = 'none';
+    }
+
+    // บันทึกค่าที่แก้ไข
+    function saveEdit() {
+        const id = Number(document.getElementById('edit-id').value);
+        const newText = document.getElementById('edit-text').value.trim();
+        
+        if (!newText) {
+            alert('กรุณากรอกรายละเอียดงานครับ');
+            return;
+        }
+
+        todos = todos.map(todo => {
+            if (todo.id === id) {
+                return {
+                    ...todo,
+                    category: document.getElementById('edit-category').value,
+                    text: newText,
+                    date: document.getElementById('edit-date').value,
+                    time: document.getElementById('edit-time').value
+                };
+            }
+            return todo;
+        });
+
+        closeEditModal();
+        saveTodos();
+    }
+
+    // ลบรายการ
+    function deleteTodo(id) {
+        if (confirm('ต้องการลบรายการนี้ใช่ไหมครับ?')) {
+            todos = todos.filter(todo => todo.id !== id);
+            saveTodos();
+        }
+    }
+
+    // ลบรายการที่ทำเสร็จแล้ว
+    function clearCompleted() {
+        todos = todos.filter(todo => !todo.completed);
+        saveTodos();
+    }
+
+    // ตัวกรองหมวดหมู่
+    function setFilter(filter, btnElement) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+        renderTodos();
+    }
+
+    // จัดรูปแบบวันที่ให้อ่านง่าย (เช่น 15 พ.ย. 2026)
+    function formatDateThai(dateStr) {
+        if (!dateStr) return '';
+        const [year, month, day] = dateStr.split('-');
+        const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        return `${parseInt(day)} ${thaiMonths[parseInt(month) - 1]} ${year}`;
+    }
+
+    // เช็กว่าเลยกำหนดเวลาหรือยัง
+    function isOverdue(dateStr, timeStr, completed) {
+        if (!dateStr || completed) return false;
+        const now = new Date();
+        const targetTime = timeStr ? timeStr : '23:59';
+        const deadline = new Date(`${dateStr}T${targetTime}`);
+        return now > deadline;
+    }
+
+    // แสดงผลรายการทั้งหมด
+    function renderTodos() {
+        todoList.innerHTML = '';
+
+        const filteredTodos = currentFilter === 'all' 
+            ? todos 
+            : todos.filter(todo => todo.category === currentFilter);
+
+        if (filteredTodos.length === 0) {
+            todoList.innerHTML = `<div class="empty-state">ไม่มีรายการในหมวดหมู่นี้ 🎉</div>`;
+        } else {
+            filteredTodos.forEach(todo => {
+                const li = document.createElement('li');
+                if (todo.completed) li.classList.add('completed');
+
+                const badgeInfo = categoryLabels[todo.category] || categoryLabels.general;
+                const overdue = isOverdue(todo.date, todo.time, todo.completed);
+
+                // สร้างข้อความแสดงวันที่และเวลา (ถ้ามีการกรอกไว้)
+                let dateTimeHTML = '';
+                if (todo.date || todo.time) {
+                    const formattedDate = formatDateThai(todo.date);
+                    const formattedTime = todo.time ? `เวลา ${todo.time} น.` : '';
+                    const overdueTag = overdue ? ' (เลยกำหนด!)' : '';
+                    dateTimeHTML = `
+                        <div class="task-datetime ${overdue ? 'overdue' : ''}">
+                            📅 ${formattedDate} ${formattedTime}${overdueTag}
+                        </div>
+                    `;
+                }
+
+                li.innerHTML = `
+                    <div class="task-left">
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleComplete(${todo.id})">
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="badge ${badgeInfo.class}">${badgeInfo.text}</span>
+                                <span class="task-text">${escapeHTML(todo.text)}</span>
+                            </div>
+                            ${dateTimeHTML}
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-icon btn-edit" onclick="openEditModal(${todo.id})">แก้ไข</button>
+                        <button class="btn-icon btn-delete" onclick="deleteTodo(${todo.id})">ลบ</button>
+                    </div>
+                `;
+                todoList.appendChild(li);
+            });
+        }
+
+        const remaining = todos.filter(t => !t.completed).length;
+        taskCount.textContent = `เหลือ ${remaining} รายการที่ต้องทำ`;
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+    }
+
+    // โหลดข้อมูลครั้งแรก
+    renderTodos();
+</script>
+
+</body>
+</html>
